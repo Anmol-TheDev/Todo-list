@@ -1,52 +1,55 @@
 import { getAuth } from "firebase/auth";
+import { signOut } from "firebase/auth";
 import { useContext, useState } from "react";
 import React from "react";
 import { ProfileContext } from "./Home/todoPage";
+import { Popover ,PopoverContent,PopoverTrigger,} from "@/components/ui/popover";
+import { CgProfile } from "react-icons/cg";
+import { FaUserCircle } from "react-icons/fa";
+import { Button } from "@/components/ui/button";
+import { useNavigate } from "react-router";
+import { AlertDialog,AlertDialogTrigger, AlertDialogContent, } from "@/components/ui/alert-dialog";
 function UserProfile() {
-    const [contextVal,setContextVal] = useState();
+  const contextVal = useContext(ProfileContext);
   const [dropDown, setDropDown] = useState(false);
-  function handleDropDown() { 
+  const auth = getAuth()
+  const user = auth?.currentUser;
+  const navigate = useNavigate()
+  function handleDropDown() {
     if (dropDown == true) {
       setDropDown(false);
     } else {
       setDropDown(true);
     }
-    console.log(contextVal)
   }
-
-  function handleLogOut() {}
-  return (
-    <div className=" flex flex-col ">
-      <button
-        onClick={handleDropDown}
-        className="text-2xl rounded-xl border p-1"
-      >
-        <i className="fa-solid fa-user"></i> Profile
-      </button>
-      {dropDown && (
-        <div className=" rounded-lg absolute w-80 border bg-white top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2">
-          <div className="flex justify-center bg-blend-normal bg-gray-200">
-            <img
-              className="h-32 rounded-[50%]  "
-              src="https://cdn.pixabay.com/photo/2015/10/05/22/37/blank-profile-picture-973460_960_720.png"
-              alt=""
-            />
-          </div>
-          <h1>User name</h1>
-          <ul>
-            {/* <li>Total TODO : {todoCount} </li>
-                        <li>Completed TODO : {completedTodo} </li> */}
-          </ul>
-          <button
-            className="p-2 border-red-400 bg-red-200"
-            onClick={handleLogOut}
-          >
-            Logout
-          </button>
+  function handleLogOut() {
+    signOut(auth).then(()=>{
+      navigate('/auth')
+    }).catch((error)=>{
+        console.log(error)
+    })
+  }
+  return(
+    <Popover>
+      <PopoverTrigger className="flex text-xl" >
+        <CgProfile className="text-3xl" /> Profile
+      </PopoverTrigger>
+      <PopoverContent className="p-8 shadow-xl w-[30vw] max-sm:w-[70vw]">
+        <div className="flex justify-center">
+          <FaUserCircle className="text-9xl"/>
         </div>
-      )}
-    </div>
-  );
+        <div className="text-lg">
+        <p><b>Name :</b> {user?.displayName  } </p>
+        <p><b>Email :</b> {user?.email} </p>
+        <p><b>Total TODO :</b> {contextVal.todoCount} </p>
+        <p><b>Completed TODO :</b> {contextVal.completedTodo} </p>
+        </div>
+        <div className=" flex justify-center p-4">
+        <Button onClick={handleLogOut} className=" bg-red-400 shadow-lg hover:bg-red-500 hover:shadow-2xl hover:top-[-20px]">Logout</Button>
+        </div>
+      </PopoverContent>
+    </Popover>
+  )
 }
 
 export default UserProfile;

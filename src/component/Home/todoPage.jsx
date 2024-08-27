@@ -2,10 +2,10 @@ import {getDatabase,ref,set,get,push,onValue,remove,update} from "firebase/datab
 import { getAuth } from "firebase/auth";
 import app from "../../firebase/firebaseConfigure";
 import { createContext, useEffect, useState } from "react";
-import { useNavigate , useLocation } from "react-router";
 import { onAuthStateChanged } from "firebase/auth";
+import { Button } from "@/components/ui/button";
 import UserProfile from "../profile";
-
+import { Input } from "@/components/ui/input";
 export const ProfileContext = createContext();
 
 function TodoPage() {
@@ -45,10 +45,10 @@ useEffect(() => { //fetching stored value from database
   setTodoCount(0);
   setCompletedTodo(0);
     if(todos){
+      setTodoCount(todos.length);
       todos.forEach((e)=>{
-        setTodoCount(todoCount++);
         if(e.completed==true){
-          setCompletedTodo(completedTodo++);
+          setCompletedTodo(++completedTodo);
         }
       })
     }
@@ -104,18 +104,19 @@ if(e.target.checked){
     setCheckStyle()
   }
   handleDbChange()
+  setCompletedTodo(0)
   }
   return (
     <ProfileContext.Provider value={{todoCount,completedTodo}}>
-    <div className="p-8 ">console.log(info)
-      <div className="flex flex-col gap-4">
-        <div className="flex justify-between pl-[40%]">
+    <div className="p-8 ">
+      <div className="flex flex-col gap-4 ">
+        <div className="flex justify-between ">
         <h1 className="text-5xl self-center">TO DO </h1>
           < UserProfile />
         </div>
         <div className="flex justify-center">
           <form onSubmit={HandleSubmit} className="flex gap-7">
-            <input className="border-2 text-xl px-2  rounded-md"
+            <Input className="border-2 text-xl px-2  rounded-md"
               type="text"
               value={title}
               onChange={(e) => {
@@ -123,7 +124,7 @@ if(e.target.checked){
               }}
               required
             />
-            <button className="bg-orange-200 p-1 rounded-md">Add todo </button> 
+            <Button>Add todo </Button> 
           </form>
         </div>
         <div className="flex flex-wrap gap-4">
