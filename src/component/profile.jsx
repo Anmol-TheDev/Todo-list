@@ -8,7 +8,8 @@ import { CgProfile } from "react-icons/cg";
 import { FaUserCircle } from "react-icons/fa";
 import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router";
-import { AlertDialog,AlertDialogTrigger, AlertDialogContent, } from "@/components/ui/alert-dialog";
+
+
 function UserProfile() {
   const contextVal = useContext(ProfileContext);
   const [dropDown, setDropDown] = useState(false);

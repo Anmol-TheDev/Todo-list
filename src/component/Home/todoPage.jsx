@@ -1,4 +1,4 @@
-import {getDatabase,ref,set,get,push,onValue,remove,update} from "firebase/database";
+import {getDatabase,ref,set,get,push,onValue,remove,update,serverTimestamp} from "firebase/database";
 import { getAuth } from "firebase/auth";
 import app from "../../firebase/firebaseConfigure";
 import { createContext, useEffect, useState } from "react";
@@ -6,6 +6,10 @@ import { onAuthStateChanged } from "firebase/auth";
 import { Button } from "@/components/ui/button";
 import UserProfile from "../profile";
 import { Input } from "@/components/ui/input";
+import {MenuBar} from "./menuBox"
+import { TiStarFullOutline } from "react-icons/ti";
+
+
 export const ProfileContext = createContext();
 
 function TodoPage() {
@@ -14,7 +18,6 @@ function TodoPage() {
   const auth = getAuth();
   const [title, setTitle] = useState("");
   const [todos, setTodo] = useState([]);
-  const [checkStyle,setCheckStyle] = useState();
   let [todoCount,setTodoCount] = useState(0);
   let [completedTodo,setCompletedTodo]= useState(0);
 useEffect(()=>{
@@ -47,7 +50,7 @@ useEffect(() => { //fetching stored value from database
     if(todos){
       setTodoCount(todos.length);
       todos.forEach((e)=>{
-        if(e.completed==true){
+        if(e?.completed==true){
           setCompletedTodo(++completedTodo);
         }
       })
@@ -55,21 +58,34 @@ useEffect(() => { //fetching stored value from database
   },[todos])
 
   const  HandleSubmit = async(e) => {   //setting data on submit
-    e.preventDefault();
+    e?.preventDefault();
+    let dateRef = new Date()
+    let temp= dateRef.toLocaleString('en-US',{
+      year:'numeric', 
+      month:'long',
+      week:'long',
+      hour: '2-digit',
+      minute: '2-digit',
+    })
     if (title.trim() === "") return; // Prevent submitting empty todos
     const newTodoRef = push(ref(db, auth?.currentUser?.uid));
     set(newTodoRef, {
       todoTitle: title,
       completed: false,
       id: newTodoRef.key,
-      time:Date()
+      time: temp,
+      star:false,
+      menu:{
+        priority:false,
+        priority_bg: "bg-slate-400"
+      }
     }).catch((error) => {
       console.error("Error adding new todo:", error);
     })
     handleDbChange()
     setTitle("");
   };
-
+ // for Readign Updated data from DB
   const handleDbChange = () => {  //refrasing the db data on any change
     const dataref = ref(db,userId)
     setTodo([])
@@ -86,26 +102,56 @@ useEffect(() => { //fetching stored value from database
   }
   const handleCheck = (argument,e) => {  //checkbox in todo
     const newRef = ref(db, `${auth?.currentUser?.uid}/${argument.id}`);
-if(e.target.checked){
+if(e?.target.checked){
+    const updatedTodo = todos.map((todo)=>(
+      argument.id==todo.id ? {...todo,completed:true} : todo
+    ))
+    setTodo(updatedTodo)
     update(newRef, {
       todoTitle:argument.todoTitle,
       completed: true,
       id: newRef.key,
-      time:argument.time
+      time:argument.time,
+      star:argument.star,
+      menu:{
+        priority:argument.menu.priority,
+        priority_bg:argument.menu.priority_bg
+      }
     })
-    setCheckStyle({textDecoration:'line-through'})
+
   } else {
+    const updatedTodo = todos.map((todo)=>(
+      argument.id==todo.id ? {...todo,completed:false} : todo
+    ))
+    setTodo(updatedTodo)
     update(newRef, {
       todoTitle:argument.todoTitle,
       completed: false,
       id: newRef.key,
-      time:argument.time
+      time:argument.time,
+      star:argument.star,
+      menu:{
+        priority:argument.menu.priority,
+        priority_bg:argument.menu.priority_bg
+      }
     })   
-    setCheckStyle()
   }
-  handleDbChange()
   setCompletedTodo(0)
   }
+
+  function handleMenuChange (Id,color,priority) {  // for changing Todo bg according to priority locally
+   const updatedTodo = todos.map((todo)=>(
+      todo.id===Id ?  {...todo,menu:{...todo.menu,priority: priority , priority_bg: color}} : todo
+   ))
+      setTodo(updatedTodo)
+  }
+  function handleStar (status,Id) {
+      const updatedTodo = todos.map((todo)=>(
+        todo.id==Id ? {...todo,star:status} : todo
+      ))
+      setTodo(updatedTodo)
+  }
+
   return (
     <ProfileContext.Provider value={{todoCount,completedTodo}}>
     <div className="p-8 ">
@@ -120,7 +166,7 @@ if(e.target.checked){
               type="text"
               value={title}
               onChange={(e) => {
-                setTitle(e.target.value);
+                setTitle(e?.target.value);
               }}
               required
             />
@@ -128,13 +174,17 @@ if(e.target.checked){
           </form>
         </div>
         <div className="flex flex-wrap gap-4">
-          {todos?.map((todo) => (
-            <div className="border-2 p-4 px-8flex flex-col w-full rounded-md "key={todo.id} draggable >
-              <input type="checkbox" checked={todo.completed} onChange={(e)=>handleCheck(todo,e)}/>
-              <h1  className={`${todo.completed ? "line-through" : ""} text-3xl`}>{todo.todoTitle}</h1>
-              <p>{todo.completed ? "Completed" : "Incomplete"}</p>
-              <p>{todo.time}</p>
-              <button className="text-red-300 float-right " onClick={()=>handleDelete(todo.id)}><i className="fa-solid fa-trash"></i></button>
+          {todos?.map((todo,i) => (
+            <div className={`border-2 p-4 px-8flex flex-col w-full rounded-md shadow-lg ${todo?.menu ? todo.menu.priority_bg : "bg-slate-400" } `} key={todo?.id||i}  >
+              <MenuBar props={todo} changeClr={handleMenuChange} hndlStar={handleStar} />
+              <div className="flex gap-3">
+              <input type="checkbox" checked={todo?.completed} onChange={(e)=>handleCheck(todo,e)}/>
+              { todo?.star==true ?  <TiStarFullOutline /> : "" }
+              </div>
+              <h1 className={`${todo?.completed ? "line-through" : ""} text-3xl`}>{todo?.todoTitle}</h1>
+              <p>{todo?.completed ? "Completed" : "Incomplete"}</p>
+              <p>{todo?.time}</p>
+              <button className="text-red-400 float-right pr-4" onClick={()=>handleDelete(todo?.id)}><i className="fa-solid fa-trash"></i></button>
             </div>
           ))}
         </div>
