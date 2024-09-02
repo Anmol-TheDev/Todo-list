@@ -242,7 +242,7 @@ function TodoPage() {
                   <button
                     className="text-red-400 float-right pr-4"
                     onClick={() => handleDelete(todo?.id)}
-                  >
+                  > 
                     <i className="fa-solid fa-trash"></i>
                   </button>
                   {/* <button onClick={()=>{isSubtodoOpen==false? setIsSubtodoOpen(true):setIsSubtodoOpen(false)}}>subtodo</button> */}
