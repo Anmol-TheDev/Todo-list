@@ -27,14 +27,14 @@ import { Input } from "@/components/ui/input";
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 
-export function MenuBar({ props, changeClr, hndlStar }) {
+export function MenuBar({ props, changeClr, hndlStar,dbChange }) {
   const auth = getAuth();
   const db = getDatabase(app);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [textRef,setTextRef] = useState()
   var Ref = ref(db, `${auth?.currentUser?.uid}/${props.id}`);
   function handlePiritoryInDb(argument, color) {
-    update(newRef, {
+    update(Ref, {
       todoTitle: props.todoTitle,
       completed: props.completed,
       id: props.id,
@@ -91,7 +91,7 @@ export function MenuBar({ props, changeClr, hndlStar }) {
                 completed:false,
                 id:subTodoRef.key
             
-          }).then(()=>console.log("subtodo"))
+          }).then(()=>dbChange())
         }
     }
   return (
@@ -120,7 +120,7 @@ export function MenuBar({ props, changeClr, hndlStar }) {
                     : setIsModalOpen(true);
                 }}
               >
-                 <MdSubdirectoryArrowLeft />
+                SubTodo <MdSubdirectoryArrowLeft />
               </MenubarItem>
             </MenubarSub>
             <MenubarSub>

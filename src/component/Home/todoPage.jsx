@@ -18,6 +18,16 @@ import UserProfile from "../profile";
 import { Input } from "@/components/ui/input";
 import { MenuBar } from "./menuBox";
 import { TiStarFullOutline } from "react-icons/ti";
+import { FaArrowTurnDown } from "react-icons/fa6";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
+import { Separator } from "@/components/ui/separator"
+import { Toggle } from "@/components/ui/toggle"
+
+
 
 export const ProfileContext = createContext();
 
@@ -29,6 +39,7 @@ function TodoPage() {
   const [todos, setTodo] = useState([]);
   let [todoCount, setTodoCount] = useState(0);
   let [completedTodo, setCompletedTodo] = useState(0);
+  const [isSubtodoOpen, setIsSubtodoOpen] = useState(false);
   useEffect(() => {
     onAuthStateChanged(auth, (user) => {
       if (user) {
@@ -197,9 +208,8 @@ function TodoPage() {
           </div>
           <div className="flex flex-wrap gap-4">
             {todos?.map((todo, i) => {
-                const subtodo = Object?.values(todo?.subtodo?? {})
+              const subtodo = Object?.values(todo?.subtodo ?? {});
               return (
-              <>
                 <div
                   className={`border-2 p-4 px-8flex flex-col w-full rounded-md shadow-lg ${
                     todo?.menu ? todo.menu.priority_bg : "bg-slate-400"
@@ -210,6 +220,7 @@ function TodoPage() {
                     props={todo}
                     changeClr={handleMenuChange}
                     hndlStar={handleStar}
+                    dbChange={handleDbChange}
                   />
                   <div className="flex gap-3">
                     <input
@@ -234,14 +245,23 @@ function TodoPage() {
                   >
                     <i className="fa-solid fa-trash"></i>
                   </button>
+                  {/* <button onClick={()=>{isSubtodoOpen==false? setIsSubtodoOpen(true):setIsSubtodoOpen(false)}}>subtodo</button> */}
+                  <Popover>
+                    <PopoverTrigger><Toggle>SubTodo <FaArrowTurnDown /> </Toggle></PopoverTrigger>
+                      <PopoverContent className={` border-gray-600 ml-8 ${todo?.menu?.priority_bg}`}>
+                    {subtodo?.map((subtodo) => (
+                      <>
+                        <div key={subtodo.key} className="flex gap-3 text-lg">
+                          <input type="checkbox" checked={todo?.checked} />
+                          <h1>{subtodo.title}</h1>
+                        </div>
+                     <Separator className="text-lg " />
+                        </>
+                    ))}
+                    </PopoverContent>
+                  </Popover>
                 </div>
-                {subtodo?.map((subtodo,i)=>(
-                  <div key={i}  >
-                    <input type="checkbox" checked={subtodo.check} />
-                    <h1>{subtodo.title}</h1>
-                  </div>
-            ))}
-              </>)
+              );
             })}
           </div>
         </div>
