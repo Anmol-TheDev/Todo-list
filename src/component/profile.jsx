@@ -35,7 +35,7 @@ function UserProfile() {
       <PopoverTrigger className="flex text-xl" >
         <CgProfile className="text-3xl" /> Profile
       </PopoverTrigger>
-      <PopoverContent className="p-8 shadow-xl w-[30vw] max-sm:w-[70vw]">
+      <PopoverContent className="p-2 shadow-2xl rounded-2xl w-[30vw] max-sm:w-[85vw]  ">
         <div className="flex justify-center">
           <FaUserCircle className="text-9xl"/>
         </div>

@@ -64,7 +64,7 @@ export function MenuBar({ props, changeClr, hndlStar,dbChange }) {
           priority: props.menu.priority,
           priority_bg: props.menu.priority_bg,
         },
-        star: true,
+        star: true, 
       }).then(() => hndlStar(true, props.id));
     } else {
       update(Ref, {
@@ -80,18 +80,17 @@ export function MenuBar({ props, changeClr, hndlStar,dbChange }) {
       }).then(() => hndlStar(false, props.id));
     }
   }
-  const handleSubTodo = ( ) => {
+  const handleSubTodo = () => {
     const subTodoRef = push(ref(db, `${auth?.currentUser?.uid}/${props.id}/subtodo`));
         if(textRef==""){
          
         } else {
-          console.log("else")
           set(subTodoRef, {
                 title:textRef,
                 completed:false,
                 id:subTodoRef.key
-            
-          }).then(()=>dbChange())
+                
+          }).then(()=>{dbChange(),"subtodoAdded"})
         }
     }
   return (
@@ -113,13 +112,7 @@ export function MenuBar({ props, changeClr, hndlStar,dbChange }) {
               </MenubarItem>
             </MenubarSub>
             <MenubarSub>
-              <MenubarItem
-                onClick={() => {
-                  isModalOpen == true
-                    ? setIsModalOpen(false)
-                    : setIsModalOpen(true);
-                }}
-              >
+              <MenubarItem onClick={() => {isModalOpen == true? setIsModalOpen(false): setIsModalOpen(true);}}>
                 SubTodo <MdSubdirectoryArrowLeft />
               </MenubarItem>
             </MenubarSub>

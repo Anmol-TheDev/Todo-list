@@ -57,7 +57,12 @@ function TodoPage() {
       .then((snapshot) => {
         if (snapshot.exists()) {
           const data = snapshot?.val() || {};
-          setTodo(Object.values(data));
+       const temp = Object.values(data)
+       temp.forEach((el,i)=>{
+            const subtodo= Object.values(el.subtodo || {}) 
+            temp[i]["subtodo"] = subtodo; 
+          })
+          setTodo(temp)
         } else {
           console.log("No data available");
         }
@@ -102,7 +107,9 @@ function TodoPage() {
       menu: {
         priority: false,
         priority_bg: "bg-slate-400",
+
       },
+      subtodo:[],
     }).catch((error) => {
       console.error("Error adding new todo:", error);
     });
@@ -113,9 +120,13 @@ function TodoPage() {
   const handleDbChange = () => {
     //refrasing the db data on any change
     const dataref = ref(db, userId);
-    setTodo([]);
     onValue(dataref, (snapshot) => {
       const data = snapshot.val();
+      let temp = Object.values(data);
+      temp.forEach((el,i)=>{
+        const subtodo= Object.values(el.subtodo || {}) 
+        temp[i]["subtodo"] = subtodo; 
+      })
       setTodo(Object.values(data));
     });
   };
@@ -175,18 +186,47 @@ function TodoPage() {
           }
         : todo
     );
-    setTodo(updatedTodo);
+    setTodo(updatedTodo); 
   }
+  //updating star status in todos array
   function handleStar(status, Id) {
     const updatedTodo = todos.map((todo) =>
       todo.id == Id ? { ...todo, star: status } : todo
     );
     setTodo(updatedTodo);
   }
+  const onSubtodoChecked = (subTodo,todo,e) =>{ 
+    console.log(todos)
+  const Ref =  ref(db, `${auth?.currentUser?.uid}/${todo.id}/subtodo/${subTodo.id}`)
+     const checkStatus = subTodo.completed==true ? false : true;
+     update(Ref,{
+      title:subTodo.title,
+      id:subTodo.id,
+      completed:checkStatus
+     }).then(()=>{
+        const updatedTodo = todos.map((t)=>{
+          if(todo.id!=t.id){
+            return t
+          }
+          return {...t,subtodo: t.subtodo.map((st) => {
+            if (st.id !== subTodo.id) return st;
+            return { ...st, completed: checkStatus };
+          }),}
+        })
+        setTodo(updatedTodo)
+     })
+  }
+
+  function deleteSubtodo(todoId,subtodoId){
+    const dataref = ref(db, `${userId}/${todoId}/subtodo/${subtodoId}`);
+    remove(dataref).then(() => {
+      handleDbChange();
+    });
+  }
 
   return (
     <ProfileContext.Provider value={{ todoCount, completedTodo }}>
-      <div className="p-8 ">
+      <div className="p-8 max-sm:p-3 ">
         <div className="flex flex-col gap-4 ">
           <div className="flex justify-between ">
             <h1 className="text-5xl self-center">TO DO </h1>
@@ -208,7 +248,7 @@ function TodoPage() {
           </div>
           <div className="flex flex-wrap gap-4">
             {todos?.map((todo, i) => {
-              const subtodo = Object?.values(todo?.subtodo ?? {});
+              // const subtodo = Object?.values(todo?.subtodo ?? {});
               return (
                 <div
                   className={`border-2 p-4 px-8flex flex-col w-full rounded-md shadow-lg ${
@@ -245,17 +285,18 @@ function TodoPage() {
                   > 
                     <i className="fa-solid fa-trash"></i>
                   </button>
-                  {/* <button onClick={()=>{isSubtodoOpen==false? setIsSubtodoOpen(true):setIsSubtodoOpen(false)}}>subtodo</button> */}
                   <Popover>
                     <PopoverTrigger><Toggle>SubTodo <FaArrowTurnDown /> </Toggle></PopoverTrigger>
-                      <PopoverContent className={` border-gray-600 ml-8 ${todo?.menu?.priority_bg}`}>
-                    {subtodo?.map((subtodo) => (
+                      <PopoverContent key={todo.id}  className={` border-gray-600 ml-8 ${todo?.menu?.priority_bg}`}>
+                    {todo.subtodo.map((subtodo) => (
                       <>
-                        <div key={subtodo.key} className="flex gap-3 text-lg">
-                          <input type="checkbox" checked={todo?.checked} />
+                        <div key={subtodo.key} className="flex text-lg w-full justify-between">
+                          <div className="flex gap-3">
+                          <input type="checkbox" checked={subtodo?.completed} onChange={(e)=>{onSubtodoChecked(subtodo,todo,e)}} />
                           <h1>{subtodo.title}</h1>
+                          </div>
+                          <button className="text-red-400 text-sm  " onClick={()=>deleteSubtodo(todo.id,subtodo.id)} > <i className="fa-solid fa-trash"></i> </button>
                         </div>
-                     <Separator className="text-lg " />
                         </>
                     ))}
                     </PopoverContent>
