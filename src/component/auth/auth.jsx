@@ -187,7 +187,7 @@ function SignIN() {
           {" "}
           {"<"} Back to Login
         </p>
-      </form>
+      </form> 
     </div>
   );
 
