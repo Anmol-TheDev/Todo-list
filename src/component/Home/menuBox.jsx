@@ -21,17 +21,17 @@ import { MdSubdirectoryArrowLeft } from "react-icons/md";
 import { HiDotsVertical } from "react-icons/hi";
 import { FaRegStar } from "react-icons/fa";
 import { getAuth } from "firebase/auth";
-import { update, getDatabase, ref,push,set } from "firebase/database";
+import { update, getDatabase, ref, push, set } from "firebase/database";
 import app from "@/firebase/firebaseConfigure";
 import { Input } from "@/components/ui/input";
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 
-export function MenuBar({ props, changeClr, hndlStar,dbChange }) {
+export function MenuBar({ props, changeClr, hndlStar, dbChange }) {
   const auth = getAuth();
   const db = getDatabase(app);
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [textRef,setTextRef] = useState()
+  const [textRef, setTextRef] = useState();
   var Ref = ref(db, `${auth?.currentUser?.uid}/${props.id}`);
   function handlePiritoryInDb(argument, color) {
     update(Ref, {
@@ -64,7 +64,7 @@ export function MenuBar({ props, changeClr, hndlStar,dbChange }) {
           priority: props.menu.priority,
           priority_bg: props.menu.priority_bg,
         },
-        star: true, 
+        star: true,
       }).then(() => hndlStar(true, props.id));
     } else {
       update(Ref, {
@@ -79,20 +79,22 @@ export function MenuBar({ props, changeClr, hndlStar,dbChange }) {
         star: false,
       }).then(() => hndlStar(false, props.id));
     }
-  }
+  };
   const handleSubTodo = () => {
-    const subTodoRef = push(ref(db, `${auth?.currentUser?.uid}/${props.id}/subtodo`));
-        if(textRef==""){
-         
-        } else {
-          set(subTodoRef, {
-                title:textRef,
-                completed:false,
-                id:subTodoRef.key
-                
-          }).then(()=>{dbChange(),"subtodoAdded"})
-        }
+    const subTodoRef = push(
+      ref(db, `${auth?.currentUser?.uid}/${props.id}/subtodo`)
+    );
+    if (textRef == "") {
+    } else {
+      set(subTodoRef, {
+        title: textRef,
+        completed: false,
+        id: subTodoRef.key,
+      }).then(() => {
+        dbChange(), "subtodoAdded";
+      });
     }
+  };
   return (
     <>
       <Menubar className=" float-right border-0">
@@ -112,7 +114,13 @@ export function MenuBar({ props, changeClr, hndlStar,dbChange }) {
               </MenubarItem>
             </MenubarSub>
             <MenubarSub>
-              <MenubarItem onClick={() => {isModalOpen == true? setIsModalOpen(false): setIsModalOpen(true);}}>
+              <MenubarItem
+                onClick={() => {
+                  isModalOpen == true
+                    ? setIsModalOpen(false)
+                    : setIsModalOpen(true);
+                }}
+              >
                 SubTodo <MdSubdirectoryArrowLeft />
               </MenubarItem>
             </MenubarSub>
@@ -121,7 +129,7 @@ export function MenuBar({ props, changeClr, hndlStar,dbChange }) {
               <MenubarSubContent>
                 <MenubarItem
                   onClick={() => {
-                    handlePiritoryInDb("High", "bg-red-200");
+                    handlePiritoryInDb(1, "bg-red-200");
                   }}
                   className=" focus:bg-red-300 "
                 >
@@ -129,7 +137,7 @@ export function MenuBar({ props, changeClr, hndlStar,dbChange }) {
                 </MenubarItem>
                 <MenubarItem
                   onClick={() => {
-                    handlePiritoryInDb("medium", "bg-yellow-200");
+                    handlePiritoryInDb(2, "bg-yellow-200");
                   }}
                   className="focus:bg-yellow-300"
                 >
@@ -137,7 +145,7 @@ export function MenuBar({ props, changeClr, hndlStar,dbChange }) {
                 </MenubarItem>
                 <MenubarItem
                   onClick={() => {
-                    handlePiritoryInDb("low", "bg-green-200");
+                    handlePiritoryInDb(3, "bg-green-200");
                   }}
                   className="focus:bg-green-300"
                 >
@@ -154,11 +162,20 @@ export function MenuBar({ props, changeClr, hndlStar,dbChange }) {
           <DialogHeader>
             <DialogTitle>Enter You Todo Title</DialogTitle>
             <DialogDescription className="p-2">
-              <Input placeholder="Enter your ToDo Title" onChange={(e)=>setTextRef(e.target.value)} />
+              <Input
+                placeholder="Enter your ToDo Title"
+                onChange={(e) => setTextRef(e.target.value)}
+              />
             </DialogDescription>
           </DialogHeader>
           <DialogFooter>
-            <Button onClick={()=>{handleSubTodo(),setIsModalOpen(false)}} >Submit</Button>
+            <Button
+              onClick={() => {
+                handleSubTodo(), setIsModalOpen(false);
+              }}
+            >
+              Submit
+            </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>

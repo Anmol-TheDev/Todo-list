@@ -24,10 +24,8 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover";
-import { Separator } from "@/components/ui/separator"
-import { Toggle } from "@/components/ui/toggle"
-
-
+import { Separator } from "@/components/ui/separator";
+import { Toggle } from "@/components/ui/toggle";
 
 export const ProfileContext = createContext();
 
@@ -39,7 +37,6 @@ function TodoPage() {
   const [todos, setTodo] = useState([]);
   let [todoCount, setTodoCount] = useState(0);
   let [completedTodo, setCompletedTodo] = useState(0);
-  const [isSubtodoOpen, setIsSubtodoOpen] = useState(false);
   useEffect(() => {
     onAuthStateChanged(auth, (user) => {
       if (user) {
@@ -57,12 +54,12 @@ function TodoPage() {
       .then((snapshot) => {
         if (snapshot.exists()) {
           const data = snapshot?.val() || {};
-       const temp = Object.values(data)
-       temp.forEach((el,i)=>{
-            const subtodo= Object.values(el.subtodo || {}) 
-            temp[i]["subtodo"] = subtodo; 
-          })
-          setTodo(temp)
+          const temp = Object.values(data);
+          temp.forEach((el, i) => {
+            const subtodo = Object.values(el.subtodo || {});
+            temp[i]["subtodo"] = subtodo;
+          });
+          setTodo(temp.sort((a,b)=>a.menu.priority-b.menu.priority));
         } else {
           console.log("No data available");
         }
@@ -105,11 +102,10 @@ function TodoPage() {
       time: temp,
       star: false,
       menu: {
-        priority: false,
+        priority:4,
         priority_bg: "bg-slate-400",
-
       },
-      subtodo:[],
+      subtodo: [],
     }).catch((error) => {
       console.error("Error adding new todo:", error);
     });
@@ -119,23 +115,26 @@ function TodoPage() {
   // for Readign Updated data from DB
   const handleDbChange = () => {
     //refrasing the db data on any change
+
     const dataref = ref(db, userId);
     onValue(dataref, (snapshot) => {
       const data = snapshot.val();
+      if(data===null) return (setTodo([]))
       let temp = Object.values(data);
-      temp.forEach((el,i)=>{
-        const subtodo= Object.values(el.subtodo || {}) 
-        temp[i]["subtodo"] = subtodo; 
-      })
-      setTodo(Object.values(data));
+      temp.forEach((el, i) => {
+        const subtodo = Object.values(el.subtodo || {});
+        temp[i]["subtodo"] = subtodo;
+      });
+      const array = Object.values(data)
+      array.sort((a,b) => a.menu.priority - b.menu.priority)
+      setTodo(array)
     });
   };
   const handleDelete = (argument) => {
     //function for deleting todo
     const dataref = ref(db, `${userId}/${argument}`);
-    remove(dataref).then(() => {
+    remove(dataref)
       handleDbChange();
-    });
   };
   const handleCheck = (argument, e) => {
     //checkbox in todo
@@ -186,7 +185,8 @@ function TodoPage() {
           }
         : todo
     );
-    setTodo(updatedTodo); 
+
+    setTodo(updatedTodo.sort((a,b)=>a.menu.priority-b.menu.priority));
   }
   //updating star status in todos array
   function handleStar(status, Id) {
@@ -195,29 +195,35 @@ function TodoPage() {
     );
     setTodo(updatedTodo);
   }
-  const onSubtodoChecked = (subTodo,todo,e) =>{ 
-    console.log(todos)
-  const Ref =  ref(db, `${auth?.currentUser?.uid}/${todo.id}/subtodo/${subTodo.id}`)
-     const checkStatus = subTodo.completed==true ? false : true;
-     update(Ref,{
-      title:subTodo.title,
-      id:subTodo.id,
-      completed:checkStatus
-     }).then(()=>{
-        const updatedTodo = todos.map((t)=>{
-          if(todo.id!=t.id){
-            return t
-          }
-          return {...t,subtodo: t.subtodo.map((st) => {
+  const onSubtodoChecked = (subTodo, todo, e) => {
+    console.log(todos);
+    const Ref = ref(
+      db,
+      `${auth?.currentUser?.uid}/${todo.id}/subtodo/${subTodo.id}`
+    );
+    const checkStatus = subTodo.completed == true ? false : true;
+    update(Ref, {
+      title: subTodo.title,
+      id: subTodo.id,
+      completed: checkStatus,
+    }).then(() => {
+      const updatedTodo = todos.map((t) => {
+        if (todo.id != t.id) {
+          return t;
+        }
+        return {
+          ...t,
+          subtodo: t.subtodo.map((st) => {
             if (st.id !== subTodo.id) return st;
             return { ...st, completed: checkStatus };
-          }),}
-        })
-        setTodo(updatedTodo)
-     })
-  }
-
-  function deleteSubtodo(todoId,subtodoId){
+          }),
+        };
+      });
+      setTodo(updatedTodo);
+    });
+  };
+console.log(todos)
+  function deleteSubtodo(todoId, subtodoId) {
     const dataref = ref(db, `${userId}/${todoId}/subtodo/${subtodoId}`);
     remove(dataref).then(() => {
       handleDbChange();
@@ -282,23 +288,45 @@ function TodoPage() {
                   <button
                     className="text-red-400 float-right pr-4"
                     onClick={() => handleDelete(todo?.id)}
-                  > 
+                  >
                     <i className="fa-solid fa-trash"></i>
                   </button>
                   <Popover>
-                    <PopoverTrigger><Toggle>SubTodo <FaArrowTurnDown /> </Toggle></PopoverTrigger>
-                      <PopoverContent key={todo.id}  className={` border-gray-600 ml-8 ${todo?.menu?.priority_bg}`}>
-                    {todo.subtodo.map((subtodo) => (
-                      <>
-                        <div key={subtodo.key} className="flex text-lg w-full justify-between">
-                          <div className="flex gap-3">
-                          <input type="checkbox" checked={subtodo?.completed} onChange={(e)=>{onSubtodoChecked(subtodo,todo,e)}} />
-                          <h1>{subtodo.title}</h1>
+                    <PopoverTrigger>
+                      <Toggle>
+                        SubTodo <FaArrowTurnDown />{" "}
+                      </Toggle>
+                    </PopoverTrigger>
+                    <PopoverContent
+                      key={todo.id}
+                      className={` border-gray-600 ml-8 ${todo?.menu?.priority_bg}`}
+                    >
+                      {todo.subtodo.map((subtodo) => (
+                        <>
+                          <div
+                            key={subtodo.key}
+                            className="flex text-lg w-full justify-between"
+                          >
+                            <div className="flex gap-3">
+                              <input
+                                type="checkbox"
+                                checked={subtodo?.completed}
+                                onChange={(e) => {
+                                  onSubtodoChecked(subtodo, todo, e);
+                                }}
+                              />
+                              <h1>{subtodo.title}</h1>
+                            </div>
+                            <button
+                              className="text-red-400 text-sm  "
+                              onClick={() => deleteSubtodo(todo.id, subtodo.id)}
+                            >
+                              {" "}
+                              <i className="fa-solid fa-trash"></i>{" "}
+                            </button>
                           </div>
-                          <button className="text-red-400 text-sm  " onClick={()=>deleteSubtodo(todo.id,subtodo.id)} > <i className="fa-solid fa-trash"></i> </button>
-                        </div>
                         </>
-                    ))}
+                      ))}
                     </PopoverContent>
                   </Popover>
                 </div>
