@@ -102,7 +102,7 @@ function TodoPage() {
       time: temp,
       star: false,
       menu: {
-        priority:4,
+        priority:0,
         priority_bg: "bg-slate-400",
       },
       subtodo: [],
